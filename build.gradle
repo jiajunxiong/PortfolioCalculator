@@ -1,0 +1,54 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+
+    implementation 'org.apache.commons:commons-math3:3.6.1' // Apache Commons Math
+    testImplementation 'io.cucumber:cucumber-java:6.10.4'
+    implementation 'com.h2database:h2:1.4.200' // H2 Database
+}
+
+test {
+    useJUnitPlatform()
+
+    beforeTest { descriptor ->
+     logger.lifecycle("Running test: ${descriptor}")
+  }
+
+}
+
+application {
+    mainClass = 'org.PortfolioCalculator.PortfolioUpdater'
+}
+
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+
+task cucumberCli() {
+    dependsOn assemble, testClasses
+    doLast {
+        javaexec {
+            main = "io.cucumber.core.cli.Main"
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            args = [
+              '--plugin', 'pretty',
+              '--plugin', 'html:target/cucumber-report.html', 
+              '--glue', 'org.PortfolioCalculator', 
+              'src/test/resources']
+        }
+    }
+}
